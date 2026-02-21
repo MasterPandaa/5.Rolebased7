@@ -1,6 +1,7 @@
 import sys
+from typing import List, Optional, Tuple
+
 import pygame
-from typing import List, Tuple, Optional
 
 # ------------------------------
 # Config & Constants
@@ -18,27 +19,27 @@ MOVE_HINT = (187, 203, 43)
 TEXT_COLOR = (20, 20, 20)
 
 PIECE_VALUES = {
-    'P': 1,
-    'N': 3,
-    'B': 3,
-    'R': 5,
-    'Q': 9,
-    'K': 0  # King tidak dinilai untuk evaluasi material sederhana
+    "P": 1,
+    "N": 3,
+    "B": 3,
+    "R": 5,
+    "Q": 9,
+    "K": 0,  # King tidak dinilai untuk evaluasi material sederhana
 }
 
 UNICODE_PIECES = {
-    ('w', 'K'): '♔',
-    ('w', 'Q'): '♕',
-    ('w', 'R'): '♖',
-    ('w', 'B'): '♗',
-    ('w', 'N'): '♘',
-    ('w', 'P'): '♙',
-    ('b', 'K'): '♚',
-    ('b', 'Q'): '♛',
-    ('b', 'R'): '♜',
-    ('b', 'B'): '♝',
-    ('b', 'N'): '♞',
-    ('b', 'P'): '♟',
+    ("w", "K"): "♔",
+    ("w", "Q"): "♕",
+    ("w", "R"): "♖",
+    ("w", "B"): "♗",
+    ("w", "N"): "♘",
+    ("w", "P"): "♙",
+    ("b", "K"): "♚",
+    ("b", "Q"): "♛",
+    ("b", "R"): "♜",
+    ("b", "B"): "♝",
+    ("b", "N"): "♞",
+    ("b", "P"): "♟",
 }
 
 # ------------------------------
@@ -46,7 +47,9 @@ UNICODE_PIECES = {
 # ------------------------------
 
 Piece = Tuple[str, str]  # (color, type) e.g. ('w','P'), ('b','Q')
-Move = Tuple[Tuple[int, int], Tuple[int, int], Optional[Piece]]  # ((r1,c1),(r2,c2),captured_piece)
+Move = Tuple[
+    Tuple[int, int], Tuple[int, int], Optional[Piece]
+]  # ((r1,c1),(r2,c2),captured_piece)
 
 
 class Board:
@@ -54,27 +57,42 @@ class Board:
     Representasi papan catur 8x8.
     Menyimpan state bidak dan menyediakan utilitas untuk memanipulasi state.
     """
+
     def __init__(self):
         # Matriks 8x8: None atau Piece
-        self.grid: List[List[Optional[Piece]]] = [[None for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)]
+        self.grid: List[List[Optional[Piece]]] = [
+            [None for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)
+        ]
         self._setup_initial()
 
     def _setup_initial(self):
         # Setup bidak putih (row 7 & 6) dan hitam (row 0 & 1)
         # Hitam
         self.grid[0] = [
-            ('b', 'R'), ('b', 'N'), ('b', 'B'), ('b', 'Q'),
-            ('b', 'K'), ('b', 'B'), ('b', 'N'), ('b', 'R')
+            ("b", "R"),
+            ("b", "N"),
+            ("b", "B"),
+            ("b", "Q"),
+            ("b", "K"),
+            ("b", "B"),
+            ("b", "N"),
+            ("b", "R"),
         ]
-        self.grid[1] = [('b', 'P') for _ in range(BOARD_SIZE)]
+        self.grid[1] = [("b", "P") for _ in range(BOARD_SIZE)]
         # Kosong tengah
         for r in range(2, 6):
             self.grid[r] = [None for _ in range(BOARD_SIZE)]
         # Putih
-        self.grid[6] = [('w', 'P') for _ in range(BOARD_SIZE)]
+        self.grid[6] = [("w", "P") for _ in range(BOARD_SIZE)]
         self.grid[7] = [
-            ('w', 'R'), ('w', 'N'), ('w', 'B'), ('w', 'Q'),
-            ('w', 'K'), ('w', 'B'), ('w', 'N'), ('w', 'R')
+            ("w", "R"),
+            ("w", "N"),
+            ("w", "B"),
+            ("w", "Q"),
+            ("w", "K"),
+            ("w", "B"),
+            ("w", "N"),
+            ("w", "R"),
         ]
 
     def in_bounds(self, r: int, c: int) -> bool:
@@ -119,11 +137,18 @@ class Rules:
     Termasuk: Pion (jalan, makan, start-double), Kuda, Gajah, Benteng, Ratu, Raja.
     Tidak termasuk: en passant, castling. Promosi otomatis ke Queen.
     """
-    KNIGHT_DIRS = [(-2, -1), (-2, 1), (-1, -2), (-1, 2),
-                   (1, -2), (1, 2), (2, -1), (2, 1)]
-    KING_DIRS = [(-1, -1), (-1, 0), (-1, 1),
-                 (0, -1),          (0, 1),
-                 (1, -1),  (1, 0), (1, 1)]
+
+    KNIGHT_DIRS = [
+        (-2, -1),
+        (-2, 1),
+        (-1, -2),
+        (-1, 2),
+        (1, -2),
+        (1, 2),
+        (2, -1),
+        (2, 1),
+    ]
+    KING_DIRS = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
 
     ROOK_DIRS = [(-1, 0), (1, 0), (0, -1), (0, 1)]
     BISHOP_DIRS = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
@@ -145,16 +170,20 @@ class Rules:
         color, ptype = piece
         moves: List[Move] = []
 
-        if ptype == 'P':
-            dir_forward = -1 if color == 'w' else 1
-            start_rank = 6 if color == 'w' else 1
+        if ptype == "P":
+            dir_forward = -1 if color == "w" else 1
+            start_rank = 6 if color == "w" else 1
             # maju 1
             r1 = r + dir_forward
             if board.in_bounds(r1, c) and board.get((r1, c)) is None:
                 moves.append(((r, c), (r1, c), None))
                 # start double
                 r2 = r + 2 * dir_forward
-                if r == start_rank and board.in_bounds(r2, c) and board.get((r2, c)) is None:
+                if (
+                    r == start_rank
+                    and board.in_bounds(r2, c)
+                    and board.get((r2, c)) is None
+                ):
                     moves.append(((r, c), (r2, c), None))
             # makan
             for dc in (-1, 1):
@@ -167,7 +196,7 @@ class Rules:
             # promosi akan ditangani saat eksekusi move (di Game/AI) secara otomatis
             return moves
 
-        if ptype == 'N':
+        if ptype == "N":
             for dr, dc in self.KNIGHT_DIRS:
                 rr, cc = r + dr, c + dc
                 if not board.in_bounds(rr, cc):
@@ -177,7 +206,7 @@ class Rules:
                     moves.append(((r, c), (rr, cc), tgt))
             return moves
 
-        if ptype == 'K':
+        if ptype == "K":
             for dr, dc in self.KING_DIRS:
                 rr, cc = r + dr, c + dc
                 if not board.in_bounds(rr, cc):
@@ -190,11 +219,11 @@ class Rules:
 
         # Sliding pieces
         dirs = []
-        if ptype == 'R':
+        if ptype == "R":
             dirs = self.ROOK_DIRS
-        elif ptype == 'B':
+        elif ptype == "B":
             dirs = self.BISHOP_DIRS
-        elif ptype == 'Q':
+        elif ptype == "Q":
             dirs = self.QUEEN_DIRS
 
         for dr, dc in dirs:
@@ -228,15 +257,16 @@ class Rules:
         if not p:
             return
         color, ptype = p
-        if ptype != 'P':
+        if ptype != "P":
             return
-        if (color == 'w' and r2 == 0) or (color == 'b' and r2 == BOARD_SIZE - 1):
-            board.set((r2, c2), (color, 'Q'))
+        if (color == "w" and r2 == 0) or (color == "b" and r2 == BOARD_SIZE - 1):
+            board.set((r2, c2), (color, "Q"))
 
 
 # ------------------------------
 # Simple AI (Greedy Capture)
 # ------------------------------
+
 
 class GreedyAI:
     """
@@ -245,6 +275,7 @@ class GreedyAI:
     - Jika tidak ada, pilih tangkapan terbaik menurut delta material.
     - Jika tetap tidak ada, pilih langkah acak/pertahankan sederhana (first legal).
     """
+
     def __init__(self, rules: Rules):
         self.rules = rules
 
@@ -284,9 +315,11 @@ class GreedyAI:
         # 3) Tidak ada capture, pilih langkah pertama yang sah
         return moves[0]
 
-    def _is_destination_safe_after_move(self, board: Board, move: Move, color: str) -> bool:
+    def _is_destination_safe_after_move(
+        self, board: Board, move: Move, color: str
+    ) -> bool:
         # Cek apakah setelah menjalankan move, kotak tujuan diserang lawan
-        enemy = 'b' if color == 'w' else 'w'
+        enemy = "b" if color == "w" else "w"
         (r1, c1), (r2, c2), _ = move
         sim = board.clone()
         sim.move_piece(move)
@@ -306,6 +339,7 @@ class GreedyAI:
 # Rendering
 # ------------------------------
 
+
 def get_font():
     # Cari font yang memiliki glyph chess unicode
     # Beberapa font umum: "Segoe UI Symbol", "DejaVu Sans", "Noto Sans Symbols"
@@ -316,7 +350,7 @@ def get_font():
         "Arial Unicode MS",
         "Symbola",
         "FreeSerif",
-        None  # fallback default
+        None,  # fallback default
     ]
     for name in candidates:
         try:
@@ -332,10 +366,14 @@ def draw_board(surface: pygame.Surface):
     for r in range(BOARD_SIZE):
         for c in range(BOARD_SIZE):
             color = WHITE if (r + c) % 2 == 0 else GREEN
-            pygame.draw.rect(surface, color, pygame.Rect(c * SQ_SIZE, r * SQ_SIZE, SQ_SIZE, SQ_SIZE))
+            pygame.draw.rect(
+                surface, color, pygame.Rect(c * SQ_SIZE, r * SQ_SIZE, SQ_SIZE, SQ_SIZE)
+            )
 
 
-def draw_highlight(surface: pygame.Surface, selected: Optional[Tuple[int, int]], moves: List[Move]):
+def draw_highlight(
+    surface: pygame.Surface, selected: Optional[Tuple[int, int]], moves: List[Move]
+):
     if selected:
         r, c = selected
         s = pygame.Surface((SQ_SIZE, SQ_SIZE), pygame.SRCALPHA)
@@ -358,13 +396,16 @@ def draw_pieces(surface: pygame.Surface, board: Board, font: pygame.font.Font):
                 glyph = UNICODE_PIECES.get(piece)
                 if glyph:
                     text = font.render(glyph, True, TEXT_COLOR)
-                    text_rect = text.get_rect(center=(c * SQ_SIZE + SQ_SIZE // 2, r * SQ_SIZE + SQ_SIZE // 2))
+                    text_rect = text.get_rect(
+                        center=(c * SQ_SIZE + SQ_SIZE // 2, r * SQ_SIZE + SQ_SIZE // 2)
+                    )
                     surface.blit(text, text_rect)
 
 
 # ------------------------------
 # Game Controller
 # ------------------------------
+
 
 class Game:
     def __init__(self):
@@ -378,13 +419,13 @@ class Game:
         self.rules = Rules()
         self.ai = GreedyAI(self.rules)
 
-        self.turn = 'w'  # putih mulai
+        self.turn = "w"  # putih mulai
         self.selected: Optional[Tuple[int, int]] = None
         self.cached_moves_from_selected: List[Move] = []
         self.running = True
 
         # Opsi: AI main hitam
-        self.ai_color = 'b'
+        self.ai_color = "b"
 
     def run(self):
         while self.running:
@@ -475,7 +516,7 @@ class Game:
         # Promosi jika perlu
         self.rules.apply_promotion_if_any(self.board, move)
         # Ganti giliran
-        self.turn = 'b' if self.turn == 'w' else 'w'
+        self.turn = "b" if self.turn == "w" else "w"
 
 
 # ------------------------------
